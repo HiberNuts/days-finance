@@ -1,5 +1,6 @@
 import prisma from "@/lib/db";
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
+
 
 export async function GET() {
     const currentDate = new Date();
@@ -22,6 +23,7 @@ export async function GET() {
             console.log(`Deleted organization with ID ${organization.id}`);
         }
         console.log(`CRON ENDED ->>>>>>>>`);
+        return NextResponse.json({ message: "CRON RAN SUCESSFULLY" })
 
     } catch (error) {
         console.log("Error while deleting organization", error);
