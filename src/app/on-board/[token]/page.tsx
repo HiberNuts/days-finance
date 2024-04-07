@@ -58,7 +58,7 @@ const ResetDefaultPassword = ({ params }: any) => {
       toast({ title: "Minimum password length is 4" });
     } else {
       try {
-        const response = await axios.post("http://localhost:3000/api/superadmin/accept-invitation", {
+        const response = await axios.post(`/api/superadmin/accept-invitation`, {
           email: data.email,
           password: data.password,
           token: params.token,

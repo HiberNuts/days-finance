@@ -14,14 +14,16 @@ datasource db {
 }
 
 model Organisation {
-  id          String @unique
-  companyName String @default("")
-  address     String @default("")
-  country     String @default("")
-  city        String @default("")
-  state       String @default("")
-  zipcode     String @default("")
+  id          String   @unique
+  companyName String   @default("")
+  address     String   @default("")
+  country     String   @default("")
+  city        String   @default("")
+  state       String   @default("")
+  zipcode     String   @default("")
   users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 }
 
 model User {

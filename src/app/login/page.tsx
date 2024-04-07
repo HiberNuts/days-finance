@@ -44,7 +44,7 @@ export default function Login() {
 
     try {
       const response: any = await signIn("credentials", {
-        email,
+        email: email.toLowerCase(),
         password,
         redirect: false,
       });
@@ -58,7 +58,7 @@ export default function Login() {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
-      toast({ title: "Login Successful",  });
+      toast({ title: "Login Successful" });
     } catch (error: any) {
       console.error("Login Failed:", error);
       toast({ title: "Login Failed", description: error.message, variant: "destructive" });

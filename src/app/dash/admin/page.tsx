@@ -20,7 +20,7 @@ const Page: NextPage<Props> = ({}) => {
   const { toast } = useToast();
   const deleteUserHandler = async (email: string) => {
     try {
-      const response = await axios.delete("http://localhost:3000/api/admin/organisation", {
+      const response = await axios.delete(`/api/admin/organisation`, {
         data: { email: email },
       });
       setdataChanged(!dataChanged);
@@ -35,7 +35,7 @@ const Page: NextPage<Props> = ({}) => {
       toast({ title: "Email a valid email" });
     } else {
       try {
-        const response = await axios.post("http://localhost:3000/api/admin/inviteauser", {
+        const response = await axios.post(`/api/admin/inviteauser`, {
           email: email,
           organizationId: session?.user?.organizationId,
           role: role,

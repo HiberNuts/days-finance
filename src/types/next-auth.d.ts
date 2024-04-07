@@ -14,7 +14,7 @@ declare module "next-auth" {
             /** The user's postal address. */
             email: string,
             role: string,
-            organizationId: string
+            organizationId?: string
         }
         token: {
             email: string

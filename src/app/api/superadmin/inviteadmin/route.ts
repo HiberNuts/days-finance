@@ -68,7 +68,7 @@ export async function POST(req: Request) {
             }
         })
 
-        const resetUrl = `http://localhost:3000/on-board/${resetToken}`
+        const resetUrl = `/on-board/${resetToken}`
 
         const mailData = {
             from: process.env.NODEMAILER_EMAIL,

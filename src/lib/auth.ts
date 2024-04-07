@@ -27,7 +27,7 @@ export const authOptions: NextAuthOptions = {
                 password: {},
             },
 
-            async authorize(credentials) {
+            async authorize(credentials): Promise<User | null> {
                 if (!credentials?.email || !credentials.password) {
                     return null
                 }
@@ -46,7 +46,7 @@ export const authOptions: NextAuthOptions = {
                         id: existingUser.id + '',
                         email: existingUser.email,
                         role: existingUser.role,
-                        organizationId: existingUser.organizationId
+                        organizationId: existingUser?.organizationId ?? undefined
                     }
                 }
 

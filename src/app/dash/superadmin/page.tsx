@@ -23,7 +23,7 @@ const Page = () => {
       toast({ title: "Email a valid email" });
     } else {
       try {
-        const response = await axios.post("http://localhost:3000/api/superadmin/inviteadmin", {
+        const response = await axios.post(`/api/superadmin/inviteadmin`, {
           email: email,
           role: role,
         });
@@ -38,7 +38,7 @@ const Page = () => {
 
   const deleteUserHandler = async (email: string) => {
     try {
-      const response = await axios.delete("http://localhost:3000/api/superadmin", {
+      const response = await axios.delete(`/api/superadmin `, {
         data: { email: email },
       });
       setdataChanged(!dataChanged);
@@ -50,7 +50,7 @@ const Page = () => {
   };
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/superadmin")
+    fetch(`/api/superadmin`)
       .then((res) => res.json())
       .then((data) => {
         setData(data);

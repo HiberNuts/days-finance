@@ -10,7 +10,7 @@ export const AddAdminHandler = async ({ email, role }: { email: string; role: st
         return
     } else {
         try {
-            const response = await axios.post("http://localhost:3000/api/superadmin", {
+            const response = await axios.post(`/api/superadmin`, {
                 email: email,
                 role: role,
             });

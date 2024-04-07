@@ -39,7 +39,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ user: null, message: "Unauthorised" }, { status: 400 })
         }
         const existingUserByEmail = await prisma.user.findUnique({
-            where: { email: email }
+            where: { email: email.toLowerCase() }
         })
         if (existingUserByEmail) {
             return NextResponse.json({ user: null, message: "User already exists" })
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
             }
         })
 
-        const resetUrl = `http://localhost:3000/on-board/${resetToken}`
+        const resetUrl = `/on-board/${resetToken}`
 
         const mailData = {
             from: process.env.NODEMAILER_EMAIL,
@@ -103,7 +103,7 @@ export async function DELETE(req: Request) {
     }
     try {
         const deletedUser = await prisma.user.delete({
-            where: { email: email }
+            where: { email: email.toLowerCase() }
         });
         return NextResponse.json({ user: deletedUser, message: "User deleted successfully" });
     } catch (error) {
