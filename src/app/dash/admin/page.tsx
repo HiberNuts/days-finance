@@ -4,7 +4,11 @@ import { NextPage } from "next";
 interface Props {}
 
 const Page: NextPage<Props> = ({}) => {
-  return <Form />;
+  return (
+    <div className="">
+      <Form />{" "}
+    </div>
+  );
 };
 
 export default Page;

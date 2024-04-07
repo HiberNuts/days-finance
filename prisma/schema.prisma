@@ -13,15 +13,28 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Organisation {
+  id          String @unique
+  companyName String @default("")
+  address     String @default("")
+  country     String @default("")
+  city        String @default("")
+  state       String @default("")
+  zipcode     String @default("")
+  users       User[]
+}
+
 model User {
-  id               Int      @id @default(autoincrement())
-  email            String   @unique
+  id               Int           @id @default(autoincrement())
+  email            String        @unique
   password         String
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  role             Role     @default(USER)
-  resetToken       String   @default("no-token")
-  resetTokenExpiry DateTime @default(now())
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  role             Role          @default(USER)
+  resetToken       String        @default("no-token")
+  resetTokenExpiry DateTime      @default(now())
+  organization     Organisation? @relation(fields: [organizationId], references: [id])
+  organizationId   String?
 }
 
 enum Role {

@@ -80,7 +80,7 @@ const Page = () => {
             +
           </Button>
         </div>
-        <AdminTable data={data} deleteUserHandler={deleteUserHandler} />
+        <AdminTable data={data?.user} deleteUserHandler={deleteUserHandler} />
       </div>
     </div>
   );

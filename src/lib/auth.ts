@@ -4,6 +4,12 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import prisma from "./db";
 import { compare } from "bcrypt";
 
+interface User {
+    email: string;
+    role: string;
+    organizationId?: string; // Add organizationId property with optional chaining
+}
+
 export const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma),
     secret: process.env.NEXTAUTH_SECRET,
@@ -29,7 +35,6 @@ export const authOptions: NextAuthOptions = {
                 if (!credentials?.email || !credentials.password) {
                     return null
                 }
-                // Add logic here to look up the user from the credentials supplied
 
                 const existingUser = await prisma.user.findUnique({ where: { email: credentials.email } })
                 if (!existingUser) {
@@ -44,7 +49,8 @@ export const authOptions: NextAuthOptions = {
                     return {
                         id: existingUser.id + '',
                         email: existingUser.email,
-                        role: existingUser.role
+                        role: existingUser.role,
+                        organizationId: existingUser.organizationId
                     }
                 }
 
@@ -60,8 +66,8 @@ export const authOptions: NextAuthOptions = {
                 return {
                     ...token,
                     email: user.email,
-                    role: user.role
-
+                    role: user.role,
+                    organizationId: user?.organizationId
                 }
             }
             return token
@@ -73,7 +79,8 @@ export const authOptions: NextAuthOptions = {
                 user: {
                     ...session.user,
                     email: token.email,
-                    role: token.role
+                    role: token.role,
+                    organizationId: token.organizationId
                 }
             }
 
