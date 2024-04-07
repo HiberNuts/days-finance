@@ -1,16 +1,16 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useSession } from "next-auth/react";
 import { useToast } from "../ui/use-toast";
 import { Button } from "../ui/button";
-import AdminTable from "../superadmin/table";
-import { Organization } from "@/types/interface";
+import { Organization, User } from "@/types/interface";
 import { Input } from "../ui/input";
-import axios from "axios";
+import { DataTable } from "../ui/gridtable";
+import { ColumnDef } from "@tanstack/react-table";
+import { SkeletonLoader } from "../ui/SkeletonLoader";
 
 export const FormDataSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
@@ -34,17 +34,24 @@ const steps = [
     name: "Contact Details & Management Accounts",
     fields: ["managementAccounts"],
   },
-  { id: "Step 3", name: "Employee Management" },
+  { id: "Step 3", name: "Employee Management", fields: ["Manage Users"] },
 ];
 
-export default function Form() {
+interface Props {
+  columns: ColumnDef<User>[];
+  dataChanged: boolean;
+  setdataChanged: (newValue: boolean) => void;
+  AddAdminHandler: ({ email, role }: { email: string; role: string }) => Promise<void>;
+}
+
+export const Form: FC<Props> = ({ setdataChanged, columns, AddAdminHandler, dataChanged }) => {
   const { toast } = useToast();
   const { data: session } = useSession();
   const [previousStep, setPreviousStep] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
+  const [isLoading, setLoading] = useState(false);
   const delta = currentStep - previousStep;
   const [orgData, setorgData] = useState<Organization>();
-  const [dataChanged, setdataChanged] = useState(false);
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("ADMIN");
 
@@ -90,6 +97,7 @@ export default function Form() {
 
   useEffect(() => {
     const fetchOrganisationData = async () => {
+      setLoading(true);
       try {
         const response = await fetch(`/api/admin/organisation?id=${session?.user?.organizationId}`, {
           method: "GET",
@@ -113,11 +121,14 @@ export default function Form() {
               zip: zipcode,
             });
           }
+          setLoading(false);
         } else {
           console.error("Failed to fetch organisation data");
+          setLoading(false);
         }
       } catch (error) {
         console.error("Error fetching organisation data:", error);
+        setLoading(false);
       }
     };
 
@@ -152,24 +163,6 @@ export default function Form() {
       }
     } catch (error) {
       toast({ title: "Failed to save company information", variant: "destructive" });
-    }
-  };
-
-  const AddAdminHandler = async ({ email }: { email: string }) => {
-    if (email.length < 2) {
-      toast({ title: "Email a valid email" });
-    } else {
-      try {
-        const response = await axios.post("http://localhost:3000/api/admin/inviteadmin", {
-          email: email,
-          organizationId: session?.user?.organizationId,
-        });
-        setdataChanged(!dataChanged);
-        toast({ title: response?.data?.message });
-      } catch (error) {
-        console.log(error);
-        toast({ title: "Something went wrong" });
-      }
     }
   };
 
@@ -209,111 +202,115 @@ export default function Form() {
         {currentStep === 0 && (
           <div>
             <h2 className="text-base font-semibold leading-7 text-gray-900">Company Information</h2>
-            <p className="mt-1 text-sm leading-6 text-gray-600">Provide the company details.</p>
-            <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-              <div className="sm:col-span-3">
-                <label htmlFor="companyName" className="block text-sm font-medium leading-6 text-gray-900">
-                  Company name
-                </label>
-                <div className="mt-2">
-                  <input
-                    type="text"
-                    id="companyName"
-                    {...register("companyName")}
-                    autoComplete="given-name"
-                    className="block w-full px-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.companyName?.message && (
-                    <p className="mt-2 text-sm text-red-400">{errors.companyName.message}</p>
-                  )}
+            <p className="mt-1 mb-10 text-sm leading-6 text-gray-600">Provide the company details.</p>
+            {isLoading ? (
+              <SkeletonLoader />
+            ) : (
+              <div className=" grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                <div className="sm:col-span-3">
+                  <label htmlFor="companyName" className="block text-sm font-medium leading-6 text-gray-900">
+                    Company name
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      id="companyName"
+                      {...register("companyName")}
+                      autoComplete="given-name"
+                      className="block w-full px-1 rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                    />
+                    {errors.companyName?.message && (
+                      <p className="mt-2 text-sm text-red-400">{errors.companyName.message}</p>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="sm:col-span-3">
-                <label htmlFor="address" className="block text-sm font-medium leading-6 text-gray-900">
-                  Address
-                </label>
-                <div className="mt-2">
-                  <input
-                    type="text"
-                    id="address"
-                    {...register("address")}
-                    autoComplete="family-name"
-                    className="block px-1 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.address?.message && <p className="mt-2 text-sm text-red-400">{errors.address.message}</p>}
+                <div className="sm:col-span-3">
+                  <label htmlFor="address" className="block text-sm font-medium leading-6 text-gray-900">
+                    Address
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      id="address"
+                      {...register("address")}
+                      autoComplete="family-name"
+                      className="block px-1 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                    />
+                    {errors.address?.message && <p className="mt-2 text-sm text-red-400">{errors.address.message}</p>}
+                  </div>
                 </div>
-              </div>
-              <div className="sm:col-span-3">
-                <label htmlFor="country" className="block text-sm font-medium leading-6 text-gray-900">
-                  Country
-                </label>
-                <div className="mt-2">
-                  <select
-                    id="country"
-                    {...register("country")}
-                    autoComplete="country-name"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:max-w-xs sm:text-sm sm:leading-6"
-                  >
-                    <option>United States</option>
-                    <option>India</option>
-                    <option>Mexico</option>
-                  </select>
-                  {errors.country?.message && <p className="mt-2 text-sm text-red-400">{errors.country.message}</p>}
+                <div className="sm:col-span-3">
+                  <label htmlFor="country" className="block text-sm font-medium leading-6 text-gray-900">
+                    Country
+                  </label>
+                  <div className="mt-2">
+                    <select
+                      id="country"
+                      {...register("country")}
+                      autoComplete="country-name"
+                      className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:max-w-xs sm:text-sm sm:leading-6"
+                    >
+                      <option>United States</option>
+                      <option>India</option>
+                      <option>Mexico</option>
+                    </select>
+                    {errors.country?.message && <p className="mt-2 text-sm text-red-400">{errors.country.message}</p>}
+                  </div>
                 </div>
-              </div>
 
-              <div className="sm:col-span-2 sm:col-start-1">
-                <label htmlFor="city" className="block text-sm font-medium leading-6 text-gray-900">
-                  City
-                </label>
-                <div className="mt-2">
-                  <input
-                    type="text"
-                    id="city"
-                    {...register("city")}
-                    autoComplete="address-level2"
-                    className="block px-1 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.city?.message && <p className="mt-2 text-sm text-red-400">{errors.city.message}</p>}
+                <div className="sm:col-span-2 sm:col-start-1">
+                  <label htmlFor="city" className="block text-sm font-medium leading-6 text-gray-900">
+                    City
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      id="city"
+                      {...register("city")}
+                      autoComplete="address-level2"
+                      className="block px-1 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                    />
+                    {errors.city?.message && <p className="mt-2 text-sm text-red-400">{errors.city.message}</p>}
+                  </div>
                 </div>
-              </div>
 
-              <div className="sm:col-span-2">
-                <label htmlFor="state" className="block text-sm font-medium leading-6 text-gray-900">
-                  State / Province
-                </label>
-                <div className="mt-2">
-                  <input
-                    type="text"
-                    id="state"
-                    {...register("state")}
-                    autoComplete="address-level1"
-                    className="block px-1 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.state?.message && <p className="mt-2 text-sm text-red-400">{errors.state.message}</p>}
+                <div className="sm:col-span-2">
+                  <label htmlFor="state" className="block text-sm font-medium leading-6 text-gray-900">
+                    State / Province
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      id="state"
+                      {...register("state")}
+                      autoComplete="address-level1"
+                      className="block px-1 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                    />
+                    {errors.state?.message && <p className="mt-2 text-sm text-red-400">{errors.state.message}</p>}
+                  </div>
                 </div>
-              </div>
 
-              <div className="sm:col-span-2">
-                <label htmlFor="zip" className="block text-sm font-medium leading-6 text-gray-900">
-                  ZIP / Postal code
-                </label>
-                <div className="mt-2">
-                  <input
-                    type="text"
-                    id="zip"
-                    {...register("zip")}
-                    autoComplete="postal-code"
-                    className="block px-1 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
-                  />
-                  {errors.zip?.message && <p className="mt-2 text-sm text-red-400">{errors.zip.message}</p>}
+                <div className="sm:col-span-2">
+                  <label htmlFor="zip" className="block text-sm font-medium leading-6 text-gray-900">
+                    ZIP / Postal code
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      id="zip"
+                      {...register("zip")}
+                      autoComplete="postal-code"
+                      className="block px-1 w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-sky-600 sm:text-sm sm:leading-6"
+                    />
+                    {errors.zip?.message && <p className="mt-2 text-sm text-red-400">{errors.zip.message}</p>}
+                  </div>
                 </div>
+                <Button className="px-2 w-full" onClick={saveStepOne}>
+                  Save Changes
+                </Button>
               </div>
-              <Button className="px-2 w-full" onClick={saveStepOne}>
-                Save Changes
-              </Button>
-            </div>
+            )}
           </div>
         )}
 
@@ -323,25 +320,56 @@ export default function Form() {
             <p className="mt-1 mb-10 text-sm leading-6 text-gray-600">Manage All the admins of your organisation</p>
             <div className="flex gap-10 justify-evenly align-middle m-10">
               <Input
+                id="admin email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
                 placeholder="Enter email of new Admins"
                 className="w-[50%]"
               />
-              <Button onClick={() => AddAdminHandler({ email })} className="text-2xl">
+              <Button onClick={() => AddAdminHandler({ email, role: "ADMIN" })} className="text-2xl">
                 +
               </Button>
             </div>
-            <AdminTable data={orgData?.users} />
+            <DataTable
+              columns={columns}
+              isLoading={isLoading}
+              data={
+                orgData?.users.filter((user) => {
+                  return user.role == "ADMIN";
+                }) as User[]
+              }
+            />
           </div>
         )}
 
         {currentStep === 2 && (
-          <>
-            <h2 className="text-base font-semibold leading-7 text-gray-900">Complete</h2>
-            <p className="mt-1 text-sm leading-6 text-gray-600">Thank you for your submission.</p>
-          </>
+          <div className="flex flex-col h-full justify-cemter align-middle">
+            <h2 className="text-base font-semibold leading-7 text-gray-900">Manage Employees of your company</h2>
+            <p className="mt-1 text-sm leading-6 text-gray-600">Fill in email and add them</p>
+            <div className="flex gap-10 justify-evenly align-middle m-10">
+              <Input
+                id="user email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="Enter email of new Admins"
+                className="w-[50%]"
+              />
+              <Button onClick={() => AddAdminHandler({ email, role: "USER" })} className="text-2xl">
+                +
+              </Button>
+            </div>
+            <DataTable
+              columns={columns}
+              isLoading={isLoading}
+              data={
+                orgData?.users.filter((user) => {
+                  return user.role == "USER";
+                }) as User[]
+              }
+            />
+          </div>
         )}
       </form>
 
@@ -386,4 +414,4 @@ export default function Form() {
       </div>
     </section>
   );
-}
+};

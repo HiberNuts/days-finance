@@ -12,17 +12,16 @@ import { Organization } from '../../../../types/interface';
 const UserSchema = z
     .object({
         email: z.string().min(1, 'Email is required').email('Invalid email'),
-        organizationId: z.string()
+        organizationId: z.string(),
+        role: z.string()
     })
-
-
 
 export async function POST(req: Request) {
     let nodemailer = require('nodemailer')
 
     const body = await req.json()
     const session = await getServerSession(authOptions);
-    const { email, organizationId } = UserSchema.parse(body);
+    const { email, organizationId, role } = UserSchema.parse(body);
 
     const transporter = nodemailer.createTransport({
         port: 465,
@@ -62,7 +61,7 @@ export async function POST(req: Request) {
             data: {
                 email,
                 password: "DEFAULT",
-                role: "ADMIN",
+                role: role as Role,
                 resetToken: passwordResetToken,
                 resetTokenExpiry: passwordResetExpires,
                 organizationId: organizationId
@@ -87,8 +86,10 @@ export async function POST(req: Request) {
             }
         })
 
-        return NextResponse.json({ message: "New Admin created successfully" })
+        return NextResponse.json({ message: "New member added successfully" })
     } catch (error) {
+        console.log(error);
+
         return NextResponse.json({ user: null, message: "Something went wrong", error })
     }
 }

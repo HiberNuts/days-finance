@@ -29,10 +29,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { User } from "@/types/interface";
-import { toast } from "../ui/use-toast";
-import axios from "axios";
+import { SkeletonLoader } from "./SkeletonLoader";
 
-export function DataTableDemo({ isLoading, columns, data }) {
+interface Props {
+  isLoading: boolean;
+  columns: ColumnDef<User>[];
+  data: User[];
+}
+
+export const DataTable: React.FC<Props> = ({ isLoading, columns, data }) => {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
@@ -93,11 +98,7 @@ export function DataTableDemo({ isLoading, columns, data }) {
       </div>
       <div className="rounded-md border">
         {isLoading ? (
-          <TableRow>
-            <TableCell colSpan={columns.length} className="h-24 text-center">
-              Loading...
-            </TableCell>
-          </TableRow>
+          <SkeletonLoader />
         ) : (
           <Table>
             <TableHeader>
@@ -154,4 +155,4 @@ export function DataTableDemo({ isLoading, columns, data }) {
       </div>
     </div>
   );
-}
+};

@@ -78,24 +78,54 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     const body = await req.json();
     const { id, companyName, address, country, city, state, zipcode } = OrgUpdateSchema.parse(body);
+    const session = await getServerSession(authOptions);
+    if (session?.user?.organizationId === id && session?.user?.role !== "USER") {
+        try {
+            const dataToUpdate: DataToUpdate = {};
+            if (companyName) dataToUpdate.companyName = companyName;
+            if (address) dataToUpdate.address = address;
+            if (country) dataToUpdate.country = country;
+            if (city) dataToUpdate.city = city;
+            if (state) dataToUpdate.state = state;
+            if (zipcode) dataToUpdate.zipcode = zipcode;
 
-    try {
-        const dataToUpdate: DataToUpdate = {};
-        if (companyName) dataToUpdate.companyName = companyName;
-        if (address) dataToUpdate.address = address;
-        if (country) dataToUpdate.country = country;
-        if (city) dataToUpdate.city = city;
-        if (state) dataToUpdate.state = state;
-        if (zipcode) dataToUpdate.zipcode = zipcode;
+            const updatedOrg = await prisma.organisation.update({
+                where: { id },
+                data: dataToUpdate
+            });
 
-        const updatedOrg = await prisma.organisation.update({
-            where: { id },
-            data: dataToUpdate
-        });
-
-        return NextResponse.json({ organisation: updatedOrg, message: "Organization updated successfully" }, { status: 200 });
-    } catch (error) {
-        console.log(error);
-        return NextResponse.json({ organisation: null, message: "Failed to update organization", error }, { status: 400 });
+            return NextResponse.json({ organisation: updatedOrg, message: "Organization updated successfully" }, { status: 200 });
+        } catch (error) {
+            console.log(error);
+            return NextResponse.json({ organisation: null, message: "Failed to update organization", error }, { status: 400 });
+        }
+    } else {
+        return NextResponse.json({ organisation: null, message: "Unauthorized!" });
     }
+
+}
+
+
+export async function DELETE(req: Request) {
+    const body = await req.json()
+    const { email } = body
+    const session = await getServerSession(authOptions);
+    if (session?.user?.role !== "ADMIN") {
+        return NextResponse.json({ user: null, message: "Unauthorised" });
+    }
+    const user = await prisma.user.findUnique({ where: { email: email } })
+    if (session?.user?.organizationId === user?.organizationId) {
+        try {
+            const deletedUser = await prisma.user.delete({
+                where: { email: email }
+            });
+            return NextResponse.json({ user: deletedUser, message: "User deleted successfully" });
+        } catch (error) {
+            return NextResponse.json({ user: null, message: "Unable to delete user", error });
+        }
+    } else {
+        return NextResponse.json({ user: null, message: "You can only delete users of your own company" });
+
+    }
+
 }

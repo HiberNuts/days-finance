@@ -6,9 +6,7 @@ import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { User } from "@/types/interface";
-import { DataTableDemo } from "@/components/admin/gridtable";
-import DemoPage from "@/components/ui/dataTable/page";
-import { DataTable } from "@/components/ui/dataTable/data-table";
+import { DataTable } from "@/components/ui/gridtable";
 import { ArrowUpDown, ChevronDown, LucideTrash, MoreHorizontal, Trash2, Trash2Icon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ColumnDef } from "@tanstack/react-table";
@@ -145,7 +143,7 @@ const Page = () => {
             +
           </Button>
         </div>
-        <DataTableDemo isLoading={isLoading} columns={columns} data={data?.user} />
+        <DataTable isLoading={isLoading} columns={columns} data={data?.user} />
 
         {/* <AdminTable data={data?.user} deleteUserHandler={deleteUserHandler} /> */}
       </div>

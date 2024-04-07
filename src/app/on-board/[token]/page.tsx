@@ -28,8 +28,6 @@ const ResetDefaultPassword = ({ params }: any) => {
   const [user, setuser] = useState(null);
 
   useEffect(() => {}, [params.token]);
-
-  //TODO: UNCOMMENT THIS
   useEffect(() => {
     if (sessionStatus === "authenticated") {
       if (session.user.role == "SUPERADMIN") {

@@ -24,7 +24,7 @@ export const authOptions: NextAuthOptions = {
             name: "Credentials",
             credentials: {
                 email: {},
-                password: {}
+                password: {},
             },
 
             async authorize(credentials) {
