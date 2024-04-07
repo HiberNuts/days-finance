@@ -1,5 +1,6 @@
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { Session } from "@/types/interface";
 import { getServerSession } from "next-auth";
 import { getSession } from "next-auth/react";
 import { NextResponse } from "next/server";
@@ -26,19 +27,37 @@ type DataToUpdate = {
 };
 
 
+
+
 export async function GET(req: Request) {
     const url = new URL(req.url);
     const searchParams = new URLSearchParams(url.search);
-    const id = searchParams.get("id")
+    const id = searchParams.get("id") || ""
 
-    const session = await getServerSession(authOptions);
+    const session: Session | null = await getServerSession(authOptions);
 
     try {
         const org = await prisma.organisation.findUnique({
             where: { id: id },
-            include: {
-                users: true
+
+            select: {
+                companyName: true,
+                address: true,
+                country: true,
+                city: true,
+                state: true,
+                zipcode: true,
+                users: {
+                    select: {
+                        email: true,
+                        organizationId: true,
+                        id: true,
+                        role: true,
+                        resetToken: true
+                    }
+                }
             }
+
         });
         if (!org) {
             return NextResponse.json({ organisation: null, message: "Organization not found" }, { status: 404 });
@@ -59,7 +78,6 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     const body = await req.json();
     const { id, companyName, address, country, city, state, zipcode } = OrgUpdateSchema.parse(body);
-    console.log(id);
 
     try {
         const dataToUpdate: DataToUpdate = {};

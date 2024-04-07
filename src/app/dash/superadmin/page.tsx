@@ -5,9 +5,16 @@ import { toast } from "@/components/ui/use-toast";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { User } from "@/types/interface";
+import { DataTableDemo } from "@/components/admin/gridtable";
+import DemoPage from "@/components/ui/dataTable/page";
+import { DataTable } from "@/components/ui/dataTable/data-table";
+import { ArrowUpDown, ChevronDown, LucideTrash, MoreHorizontal, Trash2, Trash2Icon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ColumnDef } from "@tanstack/react-table";
 
 const Page = () => {
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<{ user: User[] }>({ user: [] });
   const [isLoading, setLoading] = useState(true);
   const [dataChanged, setdataChanged] = useState(false);
   const [email, setEmail] = useState("");
@@ -53,6 +60,64 @@ const Page = () => {
       });
   }, [dataChanged]);
 
+  const columns: ColumnDef<User>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
+    {
+      accessorKey: "id",
+      header: "ID",
+      cell: ({ row }) => <div className="capitalize">{row.getValue("id")}</div>,
+    },
+    {
+      accessorKey: "email",
+      header: ({ column }) => {
+        return (
+          <Button variant="ghost" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+            Email
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        );
+      },
+      cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
+    },
+    {
+      accessorKey: "resetToken",
+      header: () => <div className="text-right">Status</div>,
+      cell: ({ row }) => {
+        let status = row.getValue("resetToken");
+        return <div className="text-right font-medium">{status === "" ? "ACCEPTED" : "PENDING"}</div>;
+      },
+    },
+    {
+      id: "actions",
+      enableHiding: false,
+      cell: ({ row }) => {
+        return (
+          <Button onClick={() => deleteUserHandler(row.getValue("email"))} className="font-medium  ">
+            <LucideTrash color="white" />
+          </Button>
+        );
+      },
+    },
+  ];
+
   return (
     <div className="w-screen h-full flex items-center flex-col justify-center align-middle">
       <div className="items-center w-full flex flex-col justify-center align-middle">
@@ -80,7 +145,9 @@ const Page = () => {
             +
           </Button>
         </div>
-        <AdminTable data={data?.user} deleteUserHandler={deleteUserHandler} />
+        <DataTableDemo isLoading={isLoading} columns={columns} data={data?.user} />
+
+        {/* <AdminTable data={data?.user} deleteUserHandler={deleteUserHandler} /> */}
       </div>
     </div>
   );

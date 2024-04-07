@@ -8,6 +8,9 @@ import { useSession } from "next-auth/react";
 import { useToast } from "../ui/use-toast";
 import { Button } from "../ui/button";
 import AdminTable from "../superadmin/table";
+import { Organization } from "@/types/interface";
+import { Input } from "../ui/input";
+import axios from "axios";
 
 export const FormDataSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
@@ -36,12 +39,14 @@ const steps = [
 
 export default function Form() {
   const { toast } = useToast();
-  const { data: session, status: sessionStatus } = useSession();
+  const { data: session } = useSession();
   const [previousStep, setPreviousStep] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
   const delta = currentStep - previousStep;
-  const [orgData, setorgData] = useState(null);
+  const [orgData, setorgData] = useState<Organization>();
   const [dataChanged, setdataChanged] = useState(false);
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("ADMIN");
 
   const {
     register,
@@ -147,6 +152,24 @@ export default function Form() {
       }
     } catch (error) {
       toast({ title: "Failed to save company information", variant: "destructive" });
+    }
+  };
+
+  const AddAdminHandler = async ({ email }: { email: string }) => {
+    if (email.length < 2) {
+      toast({ title: "Email a valid email" });
+    } else {
+      try {
+        const response = await axios.post("http://localhost:3000/api/admin/inviteadmin", {
+          email: email,
+          organizationId: session?.user?.organizationId,
+        });
+        setdataChanged(!dataChanged);
+        toast({ title: response?.data?.message });
+      } catch (error) {
+        console.log(error);
+        toast({ title: "Something went wrong" });
+      }
     }
   };
 
@@ -295,10 +318,22 @@ export default function Form() {
         )}
 
         {currentStep === 1 && (
-          <div className="flex flex-col h-full justify-evenly">
+          <div className="flex flex-col h-full justify-cemter align-middle">
             <h2 className="text-base  font-bold leading-7 text-gray-900">{orgData?.companyName} admins</h2>
             <p className="mt-1 mb-10 text-sm leading-6 text-gray-600">Manage All the admins of your organisation</p>
-            <AdminTable data={orgData.users} />
+            <div className="flex gap-10 justify-evenly align-middle m-10">
+              <Input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="Enter email of new Admins"
+                className="w-[50%]"
+              />
+              <Button onClick={() => AddAdminHandler({ email })} className="text-2xl">
+                +
+              </Button>
+            </div>
+            <AdminTable data={orgData?.users} />
           </div>
         )}
 

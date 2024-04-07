@@ -1,12 +1,7 @@
 import { Delete, DeleteIcon, Trash } from "lucide-react";
 import React from "react";
 import { Button } from "../ui/button";
-
-interface User {
-  id: string;
-  email: string;
-  role: string;
-}
+import { User } from "@/types/interface";
 
 const AdminTable = ({ data, deleteUserHandler }: any) => {
   return (
@@ -18,16 +13,25 @@ const AdminTable = ({ data, deleteUserHandler }: any) => {
               Admin Email
             </th>
             <th scope="col" className="px-6 py-3">
+              status
+            </th>
+            <th scope="col" className="px-6 py-3">
               Delete
             </th>
           </tr>
         </thead>
         <tbody>
-          {data?.map((d: User) => (
-            <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+          {data?.map((d: User, index: number) => (
+            <tr
+              key={index}
+              className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
+            >
               <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                 {d.email}
               </th>
+              <td className="px-6 py-4 text-right">
+                {d.resetToken == "" ? <span>Accepted</span> : <span>Pending</span>}
+              </td>
 
               <td className="px-6 py-4 text-right">
                 <Button

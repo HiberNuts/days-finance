@@ -6,17 +6,20 @@ declare module "next-auth" {
      */
     interface User {
         email: string,
-        role: string
+        role: string,
+        organizationId?: string
     }
     interface Session {
         user: User & {
             /** The user's postal address. */
             email: string,
-            role: string
+            role: string,
+            organizationId: string
         }
         token: {
             email: string
-            role: string
+            role: string,
+            organizationId: string
 
         }
     }

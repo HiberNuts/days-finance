@@ -45,23 +45,38 @@ export async function POST(req: Request) {
 
         const hashedPassword = await hash(password, 10)
 
-        await prisma.organisation.create({
-            data: {
-                id: orgId, // Use the generated ID as the organization ID
-            }
-        });
+        if (user.organizationId) {
+            const newUser = await prisma.user.update({
+                where: { email: email },
+                data: {
+                    password: hashedPassword,
+                    resetToken: "",
+                    resetTokenExpiry: undefined,
+                }
+            })
+            return NextResponse.json({ user: newUser, message: "You are succesfully registered!, Please login" }, { status: 200 })
+        } else {
+            await prisma.organisation.create({
+                data: {
+                    id: orgId, // Use the generated ID as the organization ID
+                }
+            });
 
-        const newUser = await prisma.user.update({
-            where: { email: email },
-            data: {
-                password: hashedPassword,
-                resetToken: "",
-                resetTokenExpiry: undefined,
-                organizationId: orgId
-            }
-        })
+            const newUser = await prisma.user.update({
+                where: { email: email },
+                data: {
+                    password: hashedPassword,
+                    resetToken: "",
+                    resetTokenExpiry: undefined,
+                    organizationId: orgId
+                }
+            })
+            return NextResponse.json({ user: newUser, message: "You are succesfully registered!, Please login" }, { status: 200 })
+        }
 
-        return NextResponse.json({ user: newUser, message: "You are succesfully registered!, Please login" }, { status: 200 })
+
+
+
     } catch (error) {
         console.log(error);
 
