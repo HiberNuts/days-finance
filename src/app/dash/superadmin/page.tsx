@@ -143,7 +143,9 @@ const Page = () => {
             +
           </Button>
         </div>
-        <DataTable isLoading={isLoading} columns={columns} data={data?.user} />
+        <div className="">
+          <DataTable isLoading={isLoading} columns={columns} data={data?.user} />
+        </div>
 
         {/* <AdminTable data={data?.user} deleteUserHandler={deleteUserHandler} /> */}
       </div>
