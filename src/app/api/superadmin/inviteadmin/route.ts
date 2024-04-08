@@ -86,7 +86,7 @@ export async function POST(req: Request) {
             }
         })
 
-        return NextResponse.json({ message: "New Admin created successfully" })
+        return NextResponse.json({ message: `${email} added successfully` })
     } catch (error) {
         return NextResponse.json({ user: null, message: "Something went wrong", error })
     }

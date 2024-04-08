@@ -11,6 +11,8 @@ import { Input } from "../ui/input";
 import { DataTable } from "../ui/gridtable";
 import { ColumnDef } from "@tanstack/react-table";
 import { SkeletonLoader } from "../ui/SkeletonLoader";
+import { Label } from "@radix-ui/react-dropdown-menu";
+import Papa from "papaparse";
 
 export const FormDataSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
@@ -43,6 +45,10 @@ interface Props {
   setdataChanged: (newValue: boolean) => void;
   AddAdminHandler: ({ email, role }: { email: string; role: string }) => Promise<void>;
 }
+interface CSVUser {
+  email: string;
+  // include other properties that are expected to be in the CSV file
+}
 
 export const Form: FC<Props> = ({ setdataChanged, columns, AddAdminHandler, dataChanged }) => {
   const { toast } = useToast();
@@ -53,7 +59,7 @@ export const Form: FC<Props> = ({ setdataChanged, columns, AddAdminHandler, data
   const delta = currentStep - previousStep;
   const [orgData, setorgData] = useState<Organization>();
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("ADMIN");
+  const [CsvFile, setCsvFile] = useState<File>();
 
   const {
     register,
@@ -163,6 +169,22 @@ export const Form: FC<Props> = ({ setdataChanged, columns, AddAdminHandler, data
       }
     } catch (error) {
       toast({ title: "Failed to save company information", variant: "destructive" });
+    }
+  };
+
+  const handleCSVSubmit = async () => {
+    if (CsvFile) {
+      Papa.parse<CSVUser>(CsvFile, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async function (results) {
+          results.data.forEach(async (user) => {
+            await AddAdminHandler({ email: user?.email, role: "USER" });
+          });
+        },
+      });
+    } else {
+      toast({ title: "Please choose a file" });
     }
   };
 
@@ -347,6 +369,19 @@ export const Form: FC<Props> = ({ setdataChanged, columns, AddAdminHandler, data
           <div className="flex flex-col h-full justify-cemter align-middle">
             <h2 className="text-base font-semibold leading-7 text-gray-900">Manage Employees of your company</h2>
             <p className="mt-1 text-sm leading-6 text-gray-600">Fill in email and add them</p>
+            <div className="w-full flex mt-2 justify-center align-middle">
+              <div className="flex w-full max-w-sm items-center gap-1.5">
+                <Label>import a CSV FILE</Label>
+                <Input
+                  accept=".csv"
+                  id="csvfile"
+                  type="file"
+                  onChange={(e) => e.target.files && setCsvFile(e.target.files[0])}
+                />
+                <Button onClick={handleCSVSubmit}>Submit</Button>
+              </div>
+            </div>
+            <p className="w-full justify-center align-middle items-center flex ">OR</p>
             <div className="flex gap-10 justify-evenly align-middle m-10">
               <Input
                 id="user email"

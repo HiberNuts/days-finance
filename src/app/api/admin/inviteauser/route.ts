@@ -52,44 +52,57 @@ export async function POST(req: Request) {
             return NextResponse.json({ user: null, message: "Organization not found" });
         }
 
-        const resetToken = crypto.randomBytes(20).toString("hex")
-        const passwordResetToken = crypto.createHash("sha256").update(resetToken).digest("hex")
+        if (role == "USER") {
+            const newUser = await prisma.user.create({
+                data: {
+                    email,
+                    password: "DEFAULT",
+                    role: role as Role,
+                    organizationId: organizationId
+                }
+            })
+            return NextResponse.json({ message: `${email} added successfully` })
+        } else {
+            const resetToken = crypto.randomBytes(20).toString("hex")
+            const passwordResetToken = crypto.createHash("sha256").update(resetToken).digest("hex")
 
-        const passwordResetExpires = new Date(Date.now() + 12096e5);
+            const passwordResetExpires = new Date(Date.now() + 12096e5);
 
-        const newUser = await prisma.user.create({
-            data: {
-                email,
-                password: "DEFAULT",
-                role: role as Role,
-                resetToken: passwordResetToken,
-                resetTokenExpiry: passwordResetExpires,
-                organizationId: organizationId
+            const newUser = await prisma.user.create({
+                data: {
+                    email,
+                    password: "DEFAULT",
+                    role: role as Role,
+                    resetToken: passwordResetToken,
+                    resetTokenExpiry: passwordResetExpires,
+                    organizationId: organizationId
+                }
+            })
+
+            const resetUrl = `/on-board/${resetToken}`
+
+            const mailData = {
+                from: process.env.NODEMAILER_EMAIL,
+                to: email,
+                subject: `Register onto Days Finance`,
+                html: `<div> <p>Your have an invitation from ${organizationInfo.companyName}, Please click on below link to access</p><p>${resetUrl}</p> </div>`
             }
-        })
 
-        const resetUrl = `/on-board/${resetToken}`
+            await transporter.sendMail(mailData, async function (err: any, info: any) {
+                if (err) {
+                    return NextResponse.json({ message: "Something went wrong while sending email", err })
+                } else {
+                    console.log("Mail sent successfully");
+                    return NextResponse.json({ message: "Mail send Successfully", err })
+                }
+            })
 
-        const mailData = {
-            from: process.env.NODEMAILER_EMAIL,
-            to: email,
-            subject: `Register onto Days Finance`,
-            html: `<div> <p>Your have an invitation from ${organizationInfo.companyName}, Please click on below link to access</p><p>${resetUrl}</p> </div>`
         }
 
-        await transporter.sendMail(mailData, async function (err: any, info: any) {
-            if (err) {
-                return NextResponse.json({ message: "Something went wrong while sending email", err })
-            } else {
-                console.log("Mail sent successfully");
-                return NextResponse.json({ message: "Mail send Successfully", err })
-            }
-        })
 
-        return NextResponse.json({ message: "New member added successfully" })
+        return NextResponse.json({ message: `${email} added successfully` })
     } catch (error) {
         console.log(error);
-
         return NextResponse.json({ user: null, message: "Something went wrong", error })
     }
 }
