@@ -2,7 +2,6 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Days Finance
 
-First, run the development server:
 
 Just add env file and you are good to go🚀
 
